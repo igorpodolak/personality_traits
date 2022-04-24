@@ -1,0 +1,8 @@
+neptune/*
+data/*
+figs/*
+jupyter/*
+logdir/*
+
+# Project exclude paths
+/.neptune/
