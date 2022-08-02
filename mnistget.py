@@ -6,7 +6,7 @@ n_images = 9
 im_sqrt = int(np.sqrt(n_images))
 label = 8
 
-data = p.load(open(os.path.join('data', 'test.p'), 'rb'))
+data = p.load(open(os.path.join('data', 'data/test.p'), 'rb'))
 
 images = []
 for _ in range(n_images):

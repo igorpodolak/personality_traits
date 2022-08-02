@@ -1,0 +1,127 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2513
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0\cname textColor;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf2 From: Jacek Rogala <rogala.jacek@gmail.com>\
+Subject: Fwd: Personality traits\
+Date: 2 November 2021 at 15:53:25 CET\
+To: "igor.podolak@gmail.com" <igor.podolak@gmail.com>\
+\
+\
+\
+---------- Forwarded message ---------\
+Od: Jacek Rogala <rogala.jacek@gmail.com>\
+Date: wt., 26 pa\uc0\u378  2021 o 12:28\
+Subject: Re: Personality traits\
+To: Igor Podolak <igor.podolak@gmail.com>\
+\
+\
+Zrobi\uc0\u322 em wg przepisu Jach. Do wyliczenia FFT uzylem spektrogramu dla 2 sek okna z zakladka 1 sek, czyli dla kazdego 0.5 Hz binu dostalem 4 wartosci ktore usrednilem. Wyniki w csv, kolejnosc elektrod ponizej. Neipokoja mnie tylko duze wartosci dla Fp1 Fp2, sprobuje jeszcze na innym pliku.\
+jach miala 8 minut rest (w calosci) my po usunieciu artefaktow mamy okolo 3 min oczu otwartych czyli pewnie porownywalnie dla jej danych.\
+\
+jacek\
+'Fp1'\
+'Fp2'\
+'F7'\
+'F3'\
+'Fz'\
+'F4'\
+'F8'\
+'T3'\
+'C3'\
+'Cz'\
+'C4'\
+'T4'\
+'T5'\
+'P3'\
+'Pz'\
+'P4'\
+'T6'\
+'O1'\
+'O2' \
+\
+pon., 25 pa\uc0\u378  2021 o 15:55\'a0Igor Podolak <igor.podolak@gmail.com> napisa\u322 (a):\
+Nie mog\uc0\u281  na razie policzy\u263 , bo moja procedura zwraca u\u347 rednion\u261  moc na poziomie sz\'f3stego-\'f3smego miejsca po przecinku.\'a0 Bra\u322 em te pliki pdf z google docs.\
+\
+Bo jedyne co mo\uc0\u380 na by liczy\u263  to\
+1. Policzy\uc0\u263  model Jach na jej danych,\
+2.sprawdzi\uc0\u263  predykcj\u281  na tym przyk\u322 adzie, kt\'f3ry mi da\u322 e\u347 .\
+\
+Ale do tego musz\uc0\u281  mie\u263  poprawn\u261  procedur\u281  preprocessingu. No ale w\u322 a\u347 nie rozmawiamy o tym, \u380 e jej nie mamy. Mo\u380 e tw\'f3j nowy cz\u322 onek zespo\u322 u by potrafi\u322 ? Ja, jak pisa\u322 em, powt\'f3rzy\u322 em ca\u322 \u261  procedur\u281  pisz\u261 c program w Pythonie wykorzystuj\u261 cy bibliotek\u281  MNE, no ale w\u322 a\u347 nie gdzie\u347  jest jaki\u347  b\u322 \u261 d i dostaj\u281  te zani\u380 one warto\u347 ci. To jest gdzie\u347  na poziomie analizy falkowej jako r\'f3wnowa\u380 nika FFT.\
+\
+Ale czy warto si\uc0\u281  nad tym m\u281 czy\u263 ? Sprawdzili\u347 my, \u380 e ta procedura dzia\u322 a. Trzeba zrobi\u263  troch\u281  inaczej, tak jak pisa\u322 em w poprzednich mailach.\'a0\
+/igor\
+\
+\
+\
+On 25 Oct 2021, at 14:52, Jacek Rogala <rogala.jacek@gmail.com> wrote:\
+\
+no tak nie doczyta\uc0\u322 em Jach,\
+To co Ci wys\uc0\u322 a\u322 em to oczyszczony sygna\u322 , a nie moc. Spr\'f3buj\u281  jutro powt\'f3rzy\u263  procedur\u281  Jach na danych z 19 elektrod. I je\u347 li mog\u281  Ci\u281  prosi\u263  to spr\'f3buj policzy\u263  na sygnale z 19 elektrodami (ju\u380  oczyszczony). Pocz\u261 tkowe bardzo ma\u322 e warto\u347 ci trzeba wyrzuci\u263  prawdopodobnie jest to artefakt wynikaj\u261 cy z uruchomienia nagrywania przed pod\u322 \u261 czeniem elektrod\
+\
+pon., 25 pa\uc0\u378  2021 o 11:03\'a0Igor Podolak <igor.podolak@gmail.com> napisa\u322 (a):\
+Cze\uc0\u347 \u263 ,\
+\
+On 24 Oct 2021, at 16:30, Jacek Rogala <rogala.jacek@gmail.com> wrote:\
+\
+M\'f3j zapis mia\uc0\u322  242 sekundy st\u261 d 242 1 Hz biny,\
+\
+\
+Nie bardzo rozumiem: 1Hz bity to by\uc0\u322 y \u347 rednie moce w kolejnych binach o szeroko\u347 ci 1 Hertza \'97 1-2Hz, 2-3Hz, 3-4Hz, itd. U Jach w danych jest 60 bil\'f3w o szeroko\u347 ci 0.5 Hertza: 0.5-1Hz, 1-1.5Hz, 1.5-2Hz, 2-2.5Hz, itd. To s\u261  u\u347 rednione moce w ca\u322 ym zapisie, wszystko jedno czy 100 sekund, czy 200, czy cokolwiek.\
+\
+Je\uc0\u347 li ty masz 242 kolumny w plikach csv dla zapis\'f3w o 242 sekundach d\u322 ugo\u347 ci, to czy nie s\u261  to \u347 rednie przez wszystkie cz\u281 stotliwo\u347 ci dla danej sekundy zapisu? W pliku rest_19_elektrod.csv (czyli wszystkie 19 elektrod), pierwsze dwie kolumny maj\u261  warto\u347 ci bardzo niskie.\
+\
+Teraz por\'f3wnania:\
+\'97 u Jach to s\uc0\u261  \u347 rednie warto\u347 ci _mocy_ (power) sygna\u322 u, st\u261 d wszystkie warto\u347 ci s\u261  dodatnie, w twoich plikach s\u261  i dodatnie i ujemne \'97 czy ty nie zapisujesz po prostu c cz\u281 \u347 ci rzeczywistej zespolonego sygna\u322 u mocy? Powinien by\u263  zapisywany chyba sygna\u322  sqrt(re^2 + im^2); ta charakterystyka powtarza si\u281  po przegl\u261 dni\u281 ci (oczami) kilkunastu plik\'f3w,\
+\'97 u Jach: cz\uc0\u281 stotliwo\u347 ci w zakresie 0.5Hz\'972.5Hz (4 pasma po 0.5Hz) maj\u261  warto\u347 ci rz\u281 du 1\'963 , poza kilkoma warto\u347 ciami 8\'9630 dla Fp1, Fp2, Fps, AF8;\'a0\
+\'97 u Jach: pozosta\uc0\u322 e pasma cz\u281 stotliwo\u347 ci , poza kilkoma skokami do warto\u347 ci kilku,maj\u261  warto\u347 ci mi\u281 dzy 0 a 1, zwykle 0.1\'960.3, 0.5\'960.7, w miar\u281  r\'f3wnomiernie\
+\'97 u ciebie: warto\uc0\u347 ci s\u261  od -40 do +35, czasem z wyskokami.\
+\
+S\uc0\u261  wi\u281 c ca\u322 kiem r\'f3\u380 ne.\
+\
+Poza tym twoje pliki rest_19_elektrod.csv (wszystkie 19 elektrod) i rest_19_elektrodv2.csv (bez Fp1 i Fp2), nawet bior\uc0\u261 c pod uwag\u281  usuni\u281 cie Fp1 i Fp2. Plik rest_19_elektrod.csv ma dwie pierwsze kolumny z warto\u347 ciami rz\u281 du -0.00015, podczas gdy w rest_19_elektrodv2.csv (bez Fp1 i Fp2) ju\u380  takich nie ma.\
+\
+\
+Wysy\uc0\u322 am ci dodatkowo plik z pracy Jach gdzie jest w miar\u281  szczeg\'f3\u322 owo opisana procedura przetwarzania. Wykorzystuj\u261  tam BrainVision Analyzer. Mo\u380 e to wyja\u347 ni jak generowa\u263  dane, kt\'f3re pasowa\u322 yby do ich danych.Pierwsze 9 punkt\'f3w jest zwyk\u322 ym przetwarzaniem, potem kroki ICA z usuni\u281 ciem mrugania i ruch\'f3w mie\u347 ni oraz odwrotnym ICA, i na ko\u324 cu analiza FFT, podzia\u322  na bity o cz\u281 stotliwo\u347 ciach i zapis. Wyra\u378 nie pisz\u261 , \u380 e zapisuj\u261  \'91power values\'92.\
+\
+/igor\
+\
+\
+\
+\
+\
+\
+mniejsza o to, wa\uc0\u380 ne jest tylko czy wielko\u347 \u263  amplitud w dowolnym u\u347 rednieniu daje szanse na rzetelne wyniki. Je\u347 li tak (a tak mi si\u281  wydaje patrz\u261 c na amplitudy) to przygotuje resty tak\u261  procedur\u261  dbaj\u261 c \u380 eby u\u347 rednienie by\u322 o zgodne z Jach.\
+Ale uwa\uc0\u380 am \u380 e im d\u322 u\u380 szy sygna\u322  tym lepiej 30 sek to zdecydowanie za ma\u322 o - przeczytam jeszcze raz Jach\
+\
+niedz., 24 pa\uc0\u378  2021 o 16:23\'a0Igor Podolak <igor.podolak@gmail.com> napisa\u322 (a):\
+OK. Ale czemu 242? Sk\uc0\u261 d to? Czy to oznacza 1 Hz biny od 0 do 242 Hz?\
+\
+U Jach by\uc0\u322 o 0.5 Hz bity w cz\u281 stotiiwo\u347 cich od 0.5 HZ do 30 Hz., st\u261 d jest ich razem 60. W trakcie budowania modelu u\u347 rednia si\u281  bity parami \'97 tak robi ona (jest w opisie) i tak powt\'f3rzy\u322 em ja. Ale 242? /igor\
+\
+\
+> On 24 Oct 2021, at 15:55, Jacek Rogala <rogala.jacek@gmail.com> wrote:\
+> \
+> <rest_19_elektrodv_resampled1Hz.csv>\
+\
+\
+\
+-- \
+Jacek Rogala\
+\
+\
+\
+-- \
+Jacek Rogala\
+\
+\
+\
+-- \
+Jacek Rogala\
+\
+\
+-- \
+Jacek Rogala\
+}

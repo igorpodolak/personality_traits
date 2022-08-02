@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/utils" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/.neptune" />
+      <excludeFolder url="file://$MODULE_DIR$/data" />
+      <excludeFolder url="file://$MODULE_DIR$/Fwd_Personality_traits_rtfd" />
+      <excludeFolder url="file://$MODULE_DIR$/logdir" />
+      <excludeFolder url="file://$MODULE_DIR$/jupyter" />
+      <excludeFolder url="file://$MODULE_DIR$/figs" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.9 (harmonia_vec_nobin_np)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="renderExternalDocumentation" value="true" />
+  </component>
+</module>
