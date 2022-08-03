@@ -10,7 +10,7 @@
       <excludeFolder url="file://$MODULE_DIR$/jupyter" />
       <excludeFolder url="file://$MODULE_DIR$/figs" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9 (harmonia_vec_nobin_np)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.10 (bnni_m1)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
