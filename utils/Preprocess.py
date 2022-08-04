@@ -20,13 +20,13 @@ from pandas import DataFrame
 
 class Preprocess:
 
-    def __init__(self, person, session, logdir, datadir, filetype,  ica_removal_method="manual",
+    def __init__(self, person, session, logdir, datadir, filetype, ica_removal_method="manual",
                  segment_length=2048, reference='average', ica_method="fastica"):
-        self.person = person        # name of the patient -- name from file
-        self.session = session      # session number if any
-        self.logdir = logdir        # logging directory (from call param)
+        self.person = person  # name of the patient -- name from file
+        self.session = session  # session number if any
+        self.logdir = logdir  # logging directory (from call param)
         self.montage_dir = Path(os.path.dirname(mne.__file__)) / 'channels' / 'data' / 'montages'
-        self.datadir = datadir      # data dir (from call)
+        self.datadir = datadir  # data dir (from call)
         self.filetype = filetype.lower()
         # self.label_19_order = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz', 'C4',
         #                        'T4', 'T5', 'P3', 'Pz', 'P4', 'T6', 'O1', 'O2']
@@ -37,23 +37,23 @@ class Preprocess:
         self.label_19_order = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz',
                                'C4', 'T4', 'T5', 'P3', 'Pz', 'P4', 'T6', 'O1', 'O2']
         # info correct labels
-        self.label_19_order = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T7', 'C3', 'Cz',
-                               'C4', 'T8', 'P7', 'P3', 'Pz', 'P4', 'P8', 'O1', 'O2']
-        self.raw = None             # raw file read
+        # self.label_19_order = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T7', 'C3', 'Cz',
+        #                        'C4', 'T8', 'P7', 'P3', 'Pz', 'P4', 'P8', 'O1', 'O2']
+        self.raw = None  # raw file read
         self.reference = reference
-        self.eog_evoked = None      # data evoked (i.e. segmented ???)
+        self.eog_evoked = None  # data evoked (i.e. segmented ???)
         self.ecg_evoked = None
-        self.ica = None             # ICA model
-        self.ica_method = ica_method    # ICA algorithm to be used., default fastica
-        self.ica_removal_method = ica_removal_method    # ICA component removal method
-        self.ica_reconstructed = None                   # reconstructed from ICA components data
-        self.segment_length = segment_length            # length of the segment, def. 2048
+        self.ica = None  # ICA model
+        self.ica_method = ica_method  # ICA algorithm to be used., default fastica
+        self.ica_removal_method = ica_removal_method  # ICA component removal method
+        self.ica_reconstructed = None  # reconstructed from ICA components data
+        self.segment_length = segment_length  # length of the segment, def. 2048
         self.epoch_len = 0
         self.segmented = None
-        self.freqs = np.arange(1.0, 31.0, 0.5)          # frequencies bins to compute: from 1 to 31 Hz with 0.5 Hz skip
+        self.freqs = np.arange(1.0, 31.0, 0.5)  # frequencies bins to compute: from 1 to 31 Hz with 0.5 Hz skip
         # self.freqs = np.arange(0.5, 30.5, 0.5)        # frequencies bins to compute: from 1 to 31 Hz with 0.5 Hz skip
-        self.morlet = None                              # morlet wavelet processed data
-        self.baseline_mode = None                       # baseline mode for shifting epochs
+        self.morlet = None  # morlet wavelet processed data
+        self.baseline_mode = None  # baseline mode for shifting epochs
 
     def read_file(self, drop_channels=True, preload=False):
         if self.filetype == 'edf':
@@ -307,7 +307,8 @@ class Preprocess:
         fig, axes = plt.subplots(all_to_plot.shape[1], width, figsize=(9, 10), constrained_layout=True)
         fig.set_constrained_layout_pads(w_pad=4 / 72, h_pad=4 / 72, hspace=0, wspace=0)
         self.morlet.plot(all_to_plot.reshape(-1), axes=axes.reshape(-1), show=False,
-                         title=f"Patient {self.person} Morlet spectrum with {self.baseline_mode} baseline", combine=None,
+                         title=f"Patient {self.person} Morlet spectrum with {self.baseline_mode} baseline",
+                         combine=None,
                          mode=self.baseline_mode, vmin=self.morlet.data.min(), vmax=self.morlet.data.max(),
                          colorbar=False)
         plt.savefig(f"./morlet_epochs_{self.person}.png")

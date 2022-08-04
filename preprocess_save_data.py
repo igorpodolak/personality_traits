@@ -9,22 +9,11 @@ from collections import Counter
 import re
 from utils import Preprocess
 from tqdm import tqdm
+from utils.file_patient_session import filename_to_patient_id, filename_to_session
 
 
 # preprocess calej bazy danych
 # nowe pliki sa zapisywane w osobnym folderze
-# 
-def filename_to_patient_id(filename):
-    pattern = r'(\w{8})_rest_'
-    match = re.search(pattern, Path(filename).parts[-1])
-    return match.group(1)
-
-
-def filename_to_session(filename):
-    pattern = r'_rest_T(\d\d?)'
-    match = re.search(pattern, filename)
-    return match.group(1)
-
 
 def main(opts):
     pp = Preprocess.Preprocess(person=opts.person, session=opts.session, logdir=Path(opts.logdir),
@@ -39,7 +28,7 @@ def main(opts):
 
     # path = Path().ab + '\\data\\REST_preprocessed'
 
-    mne.export.export_raw(opts.preproceesed_dir / f'{opts.person}_rest_preprocess_T{opts.session}.edf', pp.raw)
+    mne.export.export_raw(opts.preprocessed_dir / f'{opts.person}_rest_preprocess_T{opts.session}.edf', pp.raw)
     # pp.raw.save(f'{path}\\{opts.person}_rest_preprocess_T{opts.session}.fif')
 
     return
@@ -56,8 +45,8 @@ if __name__ == '__main__':
         DATA_ROOT_DIR = Path('/Users/igor/data')
         # info nazwa kartoteki z plikami -- wartosc w parametrze wywolania --datadir
         #     datadir = f"{DATA_ROOT_DIR}/personality_traits/RESTS_gr87"
-        datadir = Path(f'{DATA_ROOT_DIR}') / 'personality_traits' / 'RESTS_gr87'
-        preprocessed_dir = Path(f'{DATA_ROOT_DIR}') / 'personality_traits' / 'RESTS_gr87_preprocessed'
+        datadir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87'
+        preprocessed_dir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_preprocessed'
 
     channels = []
     failed_patients = []
@@ -91,8 +80,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--datadir', type=str, default=datadir, help='Diectory with EDF or SET files')
     parser.add_argument('--preprocessed_dir', type=str, default=preprocessed_dir, help='Diectory with EDF or SET files')
-    parser.add_argument('--person', type=str, default='', help='Identifier of file .edf')
-    parser.add_argument('--session', type=int, default='', help='number of session')
+    parser.add_argument('--person', type=str, default=None, help='Identifier of file .edf')
+    parser.add_argument('--session', type=int, default=None, help='number of session')
     parser.add_argument('--filetype', type=str, default=filetype, help='type of file with raw data')
     parser.add_argument('--logdir', type=str, default=logdir, help='Path to directory where save results')
 
@@ -106,11 +95,11 @@ if __name__ == '__main__':
             pass
         else:
             path_to_file = datadir / person / f'{person}_rest_T{session}.edf'
-
             args.person = person
             args.session = session
             if path_to_file.is_file():
                 main(opts=args)
             else:
                 print(f'Nie znaleziono pacjenta {person}')
+
     print("Finished")
