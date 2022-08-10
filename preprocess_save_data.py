@@ -1,5 +1,6 @@
 import argparse
 import platform
+import warnings
 from pathlib import Path
 import mne
 import mne.channels
@@ -18,17 +19,17 @@ from utils.file_patient_session import filename_to_patient_id, filename_to_sessi
 def main(opts):
     pp = Preprocess.Preprocess(person=opts.person, session=opts.session, logdir=Path(opts.logdir),
                                datadir=Path(opts.datadir), filetype=opts.filetype, ica_removal_method="manual",
-                               segment_length=2048, reference='average')
+                               segment_length=2000, reference='average', t_min=30, t_max=230.)
 
     # info read and preprocess: band-pass and notch filter, drop selected channels, interpolate bad channels,
     # info reference to average, segment to overlapping fixed length segments, build morlet epochs
-    pp.read_file(drop_channels=True, preload=True)
-    before = copy.deepcopy(pp)
+    # pp.read_file(drop_channels=True, preload=True)
+    # before = copy.deepcopy(pp)
     pp.preprocess()
 
     # path = Path().ab + '\\data\\REST_preprocessed'
 
-    mne.export.export_raw(opts.preprocessed_dir / f'{opts.person}_rest_preprocess_T{opts.session}.edf', pp.raw)
+    mne.export.export_raw(opts.preprocessed_dir / f'{opts.person}_rest_preprocess_T{opts.session:02d}.edf', pp.raw)
     # pp.raw.save(f'{path}\\{opts.person}_rest_preprocess_T{opts.session}.fif')
 
     return
@@ -54,10 +55,17 @@ if __name__ == '__main__':
 
     for person in Df["hash"]:
         for session in range(1, 21):
-            sample_data_raw_file = datadir / person / f"{person}_rest_T{session}.edf"
+            sample_data_raw_file = datadir / person / f"{person}_rest_T{session:02d}.edf"
             try:
                 raw = mne.io.read_raw_edf(sample_data_raw_file)
                 raws.append(raw)
+                # info sampling has to be 500 Hz everywhere, if not a resampling is done here
+                # warning resampling of a raw file carries with it some artefacts (read MNE docs)
+                if raw.info['sfreq'] != 500:
+                    warnings.warn(f"{sample_data_raw_file} has sfreq == {raw.info['sfreq']} != 500; resampling")
+                    raw_500 = raw.copy().resample(500, npad='auto', n_jobs=3)
+                    raw = raw_500
+                    mne.export.export_raw(fname=sample_data_raw_file, raw=raw, overwrite=True)
                 channels += raw.ch_names
             except:
                 failed_patients.append(person)
@@ -87,14 +95,18 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # todo we shall skip session 1 from all recordings; do it here or in later preprocessing steps?
     for raw in tqdm(raws):
         person = filename_to_patient_id(raw.filenames[0])
         session = filename_to_session(raw.filenames[0])
-        path_to_file = preprocessed_dir / f'{person}_rest_preprocess_T{session}.edf'
+        # info skip session 01 recordings
+        if session == 1:
+            continue
+        path_to_file = preprocessed_dir / f'{person}_rest_preprocess_T{session:02d}.edf'
         if path_to_file.is_file():
             pass
         else:
-            path_to_file = datadir / person / f'{person}_rest_T{session}.edf'
+            path_to_file = datadir / person / f'{person}_rest_T{session:02d}.edf'
             args.person = person
             args.session = session
             if path_to_file.is_file():

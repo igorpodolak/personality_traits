@@ -43,24 +43,24 @@ def train_val_dataset(dataset, val_split=0.25):
 
 
 class Net(nn.Module):
-    def __init__(self, fc6_size=250, nonlinearity_type='relu', init_mode='kaiming', kaiming_mode='fan_in'):
+    def __init__(self, fc1_size=250, nonlinearity_type='relu', init_mode='kaiming', kaiming_mode='fan_in'):
         super().__init__()
-        self.fc6_size = fc6_size
-        self.conv1d1 = nn.Conv1d(19, 19, 10)
+        self.fc1_size = fc1_size
+        self.conv1d1 = nn.Conv1d(in_channels=19, out_channels=19, kernel_size=10)
         self.batch_norm0 = nn.BatchNorm1d(19)
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=(3, 10), stride=(1, 2))
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3, 10), stride=(1, 2))
         self.batch_norm = nn.BatchNorm2d(8)
-        self.conv2 = nn.Conv2d(8, 16, kernel_size=(3, 15), stride=(1, 2))
+        self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(3, 15), stride=(1, 2))
         self.batch_norm2 = nn.BatchNorm2d(16)
-        self.conv3 = nn.Conv2d(16, 40, kernel_size=(2, 20), stride=(1, 2))
+        self.conv3 = nn.Conv2d(in_channels=16, out_channels=40, kernel_size=(2, 20), stride=(1, 2))
         self.batch_norm3 = nn.BatchNorm2d(40)
-        self.fc1 = nn.Linear(400, self.fc6_size)
+        self.fc1 = nn.Linear(400, self.fc1_size)
         # self.fc2 = nn.Linear(250, 120)
         # self.fc3 = nn.Linear(120, 84)
         # self.fc4 = nn.Linear(84, 30)
         # self.fc5 = nn.Linear(30, 20)
         # self.fc6 = nn.Linear(20, 5)
-        self.fc6 = nn.Linear(fc6_size, 5)
+        self.fc6 = nn.Linear(fc1_size, 5)
 
         self.dropout1 = nn.Dropout1d(0.25)
         self.dropout2d1 = nn.Dropout2d(0.25)
@@ -135,14 +135,18 @@ if __name__ == "__main__":
     append_to_running_loss_file = False
     dataset_type = 'seq_windowed'
     dataset_type = 'windowed'
+
     # init_mode = 'xavier'
     init_mode = 'kaiming'
     kaiming_mode = 'fan_in'
-    fc6_size = 100
+    # kaiming_mode = 'fan_out'
+    fc1_size = 100
     weight_decay = 0.5
-    epochs_to_do = 50
+    epochs_to_run = 50
+    scheduler_type = "cosineLR"
+    scheduler_type = None
 
-    # do_logging = False
+    do_logging = False
     do_logging = True
     logger = Logger(flags={'neptune': do_logging}, project='personality-traits')
     logger.add(
@@ -152,9 +156,10 @@ if __name__ == "__main__":
          f"batch={str(batch_size)}",
          f"init={init_mode}",
          f"kaiming_mode={kaiming_mode}",
-         f"fc6_size={fc6_size}",
+         f"fc6_size={fc1_size}",
          f"decay={weight_decay:.1f}",
-         f"epochs={epochs_to_do}",
+         f"epochs={epochs_to_run}",
+         f"scheduler={scheduler_type}",
          # f"encoder={opts.encoder}", f"regularize={str(opts.regularize)}", f"lr={str(opts.learning_rate)}",
          # f"clip={str(opts.clip_grad)}", f"device={str(opts.device)}", f"num_features={opts.num_features}",
          # f"encode={opts.encode}", f"encode_scale={opts.encode_scale}", f"encode_len={opts.encode_len}",
@@ -174,22 +179,16 @@ if __name__ == "__main__":
                              drop_last=True, num_workers=3)
     valloader = DataLoader(splitted['val'],
                            # batch_size=len(splitted['val']),
-                           batch_size=256,
+                           batch_size=512,
                            shuffle=False, drop_last=False, num_workers=3)
 
-    net = Net(fc6_size=fc6_size, init_mode=init_mode, kaiming_mode=kaiming_mode)
+    net = Net(fc1_size=fc1_size, init_mode=init_mode, kaiming_mode=kaiming_mode)
 
-    net.eval()
-    inputs, labels = next(iter(valloader))
-    # writer.add_graph(net, inputs)
-    if torch.cuda.is_available():
-        inputs, labels = inputs.cuda(), labels.cuda()
-    if torch.cuda.is_available():
-        net.cuda()
-    # summary(net, input_size=inputs[0].size())
     criterion = nn.MSELoss()
-    optimizer = optim.AdamW(net.parameters(), weight_decay=weight_decay)
-    for epoch in range(epochs_to_do):  # loop over the dataset multiple times
+    optimizer = optim.Adam(net.parameters(), weight_decay=weight_decay)
+    if scheduler_type is not None and scheduler_type.lower() == "cosinelr":
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=epochs_to_run - 1, verbose=True)
+    for epoch in range(epochs_to_run):  # loop over the dataset multiple times
         # writer.flush()
         running_loss = 0.0
         net.train()
@@ -212,6 +211,7 @@ if __name__ == "__main__":
             logger.log('loss', loss.item())
             # print statistics
             running_loss += loss.item()
+            """
             if print_every > 0 and (i + 1) % print_every == 0:  # print every print_every mini-batches
                 print(
                     f'{time.time():.0f}: train set: epoch: {epoch + 1}, iter {i + 1:5d} loss: {running_loss / print_every :.3f}')
@@ -221,6 +221,9 @@ if __name__ == "__main__":
                         file_object.write(f'Training set: epoka: {epoch + 1}, iteracja {i + 1:5d}'
                                           f' loss: {running_loss / print_every :.3f} \n')
                 running_loss = 0.0
+            """
+        if scheduler_type is not None:
+            scheduler.step()
 
         valid_loss = 0.0
         net.eval()
@@ -231,8 +234,8 @@ if __name__ == "__main__":
                 inputs, labels = inputs.cuda(), labels.cuda()
             outputs = net(inputs)
             loss = criterion(outputs, labels)
+            valid_loss += labels.size()[0] * loss
             # writer.add_scalar("Loss/val", loss, epoch * len(valloader) + i)
-            logger.log('valid', loss.item())
             # print statistics
             """
             valid_loss += loss.item()
@@ -244,6 +247,7 @@ if __name__ == "__main__":
                         f'Validation Set: epoka: {epoch + 1}, iteracja {i + 1:5d} loss: {valid_loss / 200 :.3f} \n')
                 valid_loss = 0.0
             """
+        logger.log('valid', valid_loss / len(valloader.dataset))
         now = datetime.now()
         if save_models:
             date_time = now.strftime("_%Y-%m-%d_%H-%M")

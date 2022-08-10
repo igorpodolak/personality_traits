@@ -16,24 +16,10 @@ from utils.file_patient_session import filename_to_patient_id, filename_to_sessi
 
 mne.set_log_level("WARNING")
 
-"""
-def filename_to_patient_id(filename):
-    pattern = r'(\w{8})_rest_'
-    match = re.search(pattern, filename)
-    return match.group(1)
-
-
-def filename_to_session(filename):
-    # todo repair filename_to_patient_id() and filename_to_session to work irrespective
-    #  to directory and move both to some utilities file
-    pattern = r'_rest_standardized_T(\d\d?)'
-    match = re.search(pattern, filename)
-    return match.group(1)
-"""
-
 # todo ŻADNYCH ZMIENNYCH GLOBALNYCH!
 Df = pd.read_csv("personality_57.csv")
-segment_length = 2048
+# todo read this file from some common place, e.g. Preprocess class
+segment_length = 2000
 sfreq = 500
 epoch_len = segment_length / sfreq
 overlap = 0.5
@@ -48,7 +34,7 @@ class WindowedEEGDataset(Dataset):
         for column in self.labels.columns:
             if column == 'hash':
                 continue
-            self.labels[column] = (self.labels[column] - self.labels[column].mean()) / self.labels[column].std()
+            # self.labels[column] = (self.labels[column] - self.labels[column].mean()) / self.labels[column].std()
         self.root_dir = root_dir
         self.transform = transform
 
@@ -63,7 +49,8 @@ class WindowedEEGDataset(Dataset):
         session = info["session"]
         selection = int(info["selection"])
 
-        file_path = self.root_dir / f"{hash}_rest_standardized_T{session}.edf"
+        # todo reading a whole file to segment it and getting out one window is very time/resource consuming
+        file_path = self.root_dir / f"{hash}_rest_standardized_T{session:02d}.edf"
         raw = mne.io.read_raw_edf(file_path)
         segmented = mne.make_fixed_length_epochs(raw=raw, duration=epoch_len, preload=True,
                                                  overlap=epoch_len * overlap)
@@ -92,7 +79,7 @@ class WindowedSequenceEEGDataset(Dataset):
         for column in self.labels.columns:
             if column == 'hash':
                 continue
-            self.labels[column] = (self.labels[column] - self.labels[column].mean()) / self.labels[column].std()
+            # self.labels[column] = (self.labels[column] - self.labels[column].mean()) / self.labels[column].std()
         self.root_dir = root_dir
         self.transform = transform
 

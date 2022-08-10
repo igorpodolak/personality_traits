@@ -29,6 +29,7 @@ elif platform.node().startswith('Igors-MacBook-Pro') or platform.node().startswi
     DATA_ROOT_DIR = Path('/Users/igor/data')
     datadir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_preprocessed'
     path_standardized = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_standardized'
+    # todo przeniesc to gdzies?
     savedatadir = Path().absolute() / "data"
     mean_file_path = Path(savedatadir) / 'means_of_channels.txt'
     std_file_path = Path(savedatadir) / 'std_of_channels.txt'
@@ -40,6 +41,7 @@ files = [f for f in os.listdir(datadir) if isfile(join(datadir, f)) if not f.sta
 
 os.chdir(datadir)
 
+# todo get the list of channels from some common place, e.g. Preprocess class
 channel_names = ['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz', 'C4',
                  'T4', 'T5', 'P3', 'Pz', 'P4', 'T6', 'O1', 'O2']
 
@@ -103,8 +105,12 @@ os.chdir(datadir)
 arrays = [0] * 19
 
 for file_str in tqdm(files):
-    file_path = Path(
-        path_standardized) / f'{filename_to_patient_id(file_str)}_rest_standardized_T{filename_to_session(file_str)}.edf'
+    patient_id = filename_to_patient_id(file_str)
+    session = filename_to_session(file_str)
+    # info skip all first sessions
+    if session == 1:
+        continue
+    file_path = Path(path_standardized) / f'{patient_id}_rest_standardized_T{session:02d}.edf'
     if file_path.is_file():
         pass
     else:

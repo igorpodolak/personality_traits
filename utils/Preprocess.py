@@ -1,4 +1,6 @@
 import os
+import warnings
+
 import numpy as np
 import mne
 from mne.preprocessing import ICA, create_eog_epochs, create_ecg_epochs
@@ -20,8 +22,8 @@ from pandas import DataFrame
 
 class Preprocess:
 
-    def __init__(self, person, session, logdir, datadir, filetype, ica_removal_method="manual",
-                 segment_length=2048, reference='average', ica_method="fastica"):
+    def __init__(self, person, session, logdir, datadir, filetype, ica_removal_method="manual", sfreq=500,
+                 segment_length=2000, t_min=0., t_max=None, reference='average', ica_method="fastica"):
         self.person = person  # name of the patient -- name from file
         self.session = session  # session number if any
         self.logdir = logdir  # logging directory (from call param)
@@ -54,11 +56,25 @@ class Preprocess:
         # self.freqs = np.arange(0.5, 30.5, 0.5)        # frequencies bins to compute: from 1 to 31 Hz with 0.5 Hz skip
         self.morlet = None  # morlet wavelet processed data
         self.baseline_mode = None  # baseline mode for shifting epochs
+        self.t_min = t_min
+        self.t_max = t_max
+        self.sfreq = sfreq
 
     def read_file(self, drop_channels=True, preload=False):
         if self.filetype == 'edf':
-            in_file = Path(self.datadir) / f"{self.person}" / f"{self.person}_rest_T{self.session}.edf"
+            in_file = Path(self.datadir) / f"{self.person}" / f"{self.person}_rest_T{self.session:02d}.edf"
             self.raw = mne.io.read_raw_edf(input_fname=in_file.absolute().as_posix(), preload=preload)
+            # todo resample if sfreq is not 500Hz
+            # warning resampling raw file is not optimal -- see MNE resampling
+            if self.raw.info['sfreq'] != self.sfreq:
+                warnings.warn(f"{in_file} has sfreq == {self.raw.info['sfreq']} != {self.sfreq}; resampling")
+                self.raw = self.raw.copy().resample(self.sfreq, npad='auto', n_jobs=3)
+            if self.t_max is not None and self.t_min < self.t_max:
+                # info crop the raw file to [t_min, t_max) range
+                # todo check if the length of file is ok; ?skip file if not???
+                # todo not sure whetehr substracting 1 / sfreq was correct...
+                # self.raw.crop(tmin=self.t_min, tmax=self.t_max - 1/self.raw.info['sfreq'])
+                self.raw.crop(tmin=self.t_min, tmax=self.t_max)
         elif self.filetype == 'fdt':
             in_file = Path(self.datadir) / f"{self.person}" / f"{self.person}_rest_T{self.session}.set"
             self.raw = mne.io.read_raw_eeglab(input_fname=in_file.absolute().as_posix(), eog='auto', preload=preload)
