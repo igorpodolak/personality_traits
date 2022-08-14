@@ -1,4 +1,5 @@
 import platform
+import sys
 import time
 from pathlib import Path
 
@@ -31,6 +32,17 @@ elif platform.node().startswith('Igors-MacBook-Pro') or platform.node().startswi
     path = standardized_dir
 
 
+# check if in debug mode
+def is_debug_mode() -> bool:
+    gettrace = getattr(sys, 'gettrace', None)
+
+    if gettrace is None:
+        return False
+    elif gettrace():
+        return True
+    else:
+        return False
+
 # Assuming that we are on a CUDA machine, this should print a CUDA device:
 
 def train_val_dataset(dataset, val_split=0.25):
@@ -42,26 +54,19 @@ def train_val_dataset(dataset, val_split=0.25):
     return datasets
 
 
-class Net(nn.Module):
+class NetSeq(nn.Module):
     def __init__(self, fc1_size=250, nonlinearity_type='relu', init_mode='kaiming', kaiming_mode='fan_in'):
         super().__init__()
         self.fc1_size = fc1_size
-        conv1d1_mult = 4
-        conv1d1_in = 19
-        conv1d1_out = conv1d1_mult * conv1d1_in
-        self.conv1d1 = nn.Conv1d(in_channels=19, out_channels=conv1d1_out, kernel_size=10)
-        self.batch_norm0 = nn.BatchNorm1d(conv1d1_out)
-        conv1_out = 8
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=conv1_out, kernel_size=(3, 10), stride=(1, 2))
-        self.batch_norm = nn.BatchNorm2d(conv1_out)
-        conv2_out = 16
-        self.conv2 = nn.Conv2d(in_channels=conv1_out, out_channels=conv2_out, kernel_size=(3, 15), stride=(1, 2))
-        self.batch_norm2 = nn.BatchNorm2d(conv2_out)
-        conv3_out = 32
-        self.conv3 = nn.Conv2d(in_channels=conv2_out, out_channels=conv3_out, kernel_size=(2, 20), stride=(1, 2))
-        self.batch_norm3 = nn.BatchNorm2d(conv3_out)
-        fc1_in = conv3_out * 8 * int(self.conv3.kernel_size[-1] // self.conv3.stride[-1])
-        self.fc1 = nn.Linear(fc1_in, self.fc1_size)
+        self.conv1d1 = nn.Conv1d(in_channels=19, out_channels=19, kernel_size=10)
+        self.batch_norm0 = nn.BatchNorm1d(19)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3, 10), stride=(1, 2))
+        self.batch_norm = nn.BatchNorm2d(8)
+        self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(3, 15), stride=(1, 2))
+        self.batch_norm2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(in_channels=16, out_channels=40, kernel_size=(2, 20), stride=(1, 2))
+        self.batch_norm3 = nn.BatchNorm2d(40)
+        self.fc1 = nn.Linear(400, self.fc1_size)
         # self.fc2 = nn.Linear(250, 120)
         # self.fc3 = nn.Linear(120, 84)
         # self.fc4 = nn.Linear(84, 30)
@@ -113,35 +118,39 @@ class Net(nn.Module):
         init.kaiming_uniform_(self.fc6.weight, mode=self.kaiming_mode, nonlinearity='linear')
         init.constant_(self.fc6.bias, 0)
 
-    def forward(self, x):
-        x = F.relu(self.conv1d1(x))
-        x = self.batch_norm0(self.dropout1(self.pool1d(x)))
-        x = torch.unsqueeze(x, 1)
-        # x = torch.transpose(x, 0, 1)
-        x = F.relu(self.conv1(x))
-        x = self.batch_norm(self.dropout2d1(self.pool(x)))
-        x = F.relu(self.conv2(x))
-        x = self.batch_norm2(self.dropout2d2(self.pool(x)))
-        x = F.relu(self.conv3(x))
-        x = self.batch_norm3(self.dropout2d3(self.pool(x)))
-        x = torch.flatten(x, 1)  # flatten all dimensions except batch
-        x = F.relu(self.fc1(x))
-        # x = F.relu(self.fc2(x))
-        # x = F.relu(self.fc3(x))
-        # x = F.relu(self.fc4(x))
-        # x = F.relu(self.fc5(x))
-        x = self.fc6(x)
-        return x
+    def forward(self, z):
+        y = torch.zeros(z.size()[0], z.size()[1], self.fc6.out_features)
+        for k in range(z.size()[1]):
+            x = z[:, k, ...]
+            x = F.relu(self.conv1d1(x))
+            x = self.batch_norm0(self.dropout1(self.pool1d(x)))
+            x = torch.unsqueeze(x, 1)
+            # x = torch.transpose(x, 0, 1)
+            x = F.relu(self.conv1(x))
+            x = self.batch_norm(self.dropout2d1(self.pool(x)))
+            x = F.relu(self.conv2(x))
+            x = self.batch_norm2(self.dropout2d2(self.pool(x)))
+            x = F.relu(self.conv3(x))
+            x = self.batch_norm3(self.dropout2d3(self.pool(x)))
+            x = torch.flatten(x, 1)  # flatten all dimensions except batch
+            x = F.relu(self.fc1(x))
+            x = self.fc6(x)
+            y[:, k, :] = x
+        out = torch.mean(y, 1)
+        return out
 
 
 if __name__ == "__main__":
-    batch_size = 32
+    batch_size = 8
+    num_workers = 2
+    if is_debug_mode():
+        num_workers = 1
     channels = 19
     save_models = False
     print_every = 0
     append_to_running_loss_file = False
-    dataset_type = 'seq_windowed'
     dataset_type = 'windowed'
+    dataset_type = 'seq_windowed'
 
     # init_mode = 'xavier'
     init_mode = 'kaiming'
@@ -149,12 +158,14 @@ if __name__ == "__main__":
     # kaiming_mode = 'fan_out'
     fc1_size = 100
     weight_decay = 0.5
-    epochs_to_run = 50
-    scheduler_type = None
+    epochs_to_run = 100
     scheduler_type = "cosineLR"
+    # scheduler_type = None
 
     do_logging = False
     do_logging = True
+    if is_debug_mode():
+        do_logging = False
     logger = Logger(flags={'neptune': do_logging}, project='personality-traits')
     logger.add(
         ["simple_convd", f"node={platform.node()}",
@@ -183,52 +194,37 @@ if __name__ == "__main__":
 
     splitted = train_val_dataset(dataset, val_split=0.2)
     trainloader = DataLoader(splitted['train'], batch_size=batch_size, shuffle=True,
-                             drop_last=True, num_workers=3)
+                             drop_last=True, num_workers=num_workers)
     valloader = DataLoader(splitted['val'],
                            # batch_size=len(splitted['val']),
-                           batch_size=64,
-                           shuffle=False, drop_last=False, num_workers=3)
+                           batch_size=batch_size,
+                           shuffle=False, drop_last=False, num_workers=num_workers)
 
-    net = Net(fc1_size=fc1_size, init_mode=init_mode, kaiming_mode=kaiming_mode)
+    net = NetSeq(fc1_size=fc1_size, init_mode=init_mode, kaiming_mode=kaiming_mode)
 
     criterion = nn.MSELoss()
     optimizer = optim.AdamW(net.parameters(), weight_decay=weight_decay)
     if scheduler_type is not None and scheduler_type.lower() == "cosinelr":
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=epochs_to_run - 1, verbose=True)
     for epoch in range(epochs_to_run):  # loop over the dataset multiple times
-        # writer.flush()
         running_loss = 0.0
         net.train()
         for i, data in enumerate(trainloader, 0):
-            # get the inputs; data is a list of [inputs, labels]
-
             inputs, labels = data
             if torch.cuda.is_available():
                 inputs, labels = inputs.cuda(), labels.cuda()
-
-            # zero the parameter gradients
+            # todo why labels have size (number of examples, 1, 5)??? Why the 1?
+            #  No problem in cnn_nn_npt, but a problem here. Solve it generally instead of a squeeze() here
+            labels = torch.squeeze(labels, 1)
             optimizer.zero_grad()
-
-            # forward + backward + optimize
             outputs = net(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-            # writer.add_scalar("Loss/train", loss, epoch * len(trainloader) + i)
             logger.log('loss', loss.item())
-            # print statistics
-            running_loss += loss.item()
-            """
-            if print_every > 0 and (i + 1) % print_every == 0:  # print every print_every mini-batches
-                print(
-                    f'{time.time():.0f}: train set: epoch: {epoch + 1}, iter {i + 1:5d} loss: {running_loss / print_every :.3f}')
-                if append_to_running_loss_file:
-                    with open("test.txt", "a") as file_object:
-                        # Append to file at the a
-                        file_object.write(f'Training set: epoka: {epoch + 1}, iteracja {i + 1:5d}'
-                                          f' loss: {running_loss / print_every :.3f} \n')
-                running_loss = 0.0
-            """
+            running_loss += labels.size()[0] * loss.item()
+
+        logger.log("loss-epoch", running_loss / len(trainloader.dataset))
         if scheduler_type is not None:
             scheduler.step()
 
@@ -239,26 +235,16 @@ if __name__ == "__main__":
             inputs, labels = data
             if torch.cuda.is_available():
                 inputs, labels = inputs.cuda(), labels.cuda()
+            labels = torch.squeeze(labels, 1)
             outputs = net(inputs)
             loss = criterion(outputs, labels)
             valid_loss += labels.size()[0] * loss
-            # writer.add_scalar("Loss/val", loss, epoch * len(valloader) + i)
-            # print statistics
-            """
-            valid_loss += loss.item()
-            if i % 200 == 199:  # print every 2000 mini-batches
-                print(f'Validation Set: epoka: {epoch + 1}, iteracja: {i + 1:5d} loss: {valid_loss / 200 :.3f}')
-                with open("test.txt", "a") as file_object:
-                    # Append to file at the a
-                    file_object.write(
-                        f'Validation Set: epoka: {epoch + 1}, iteracja {i + 1:5d} loss: {valid_loss / 200 :.3f} \n')
-                valid_loss = 0.0
-            """
         logger.log('valid', valid_loss / len(valloader.dataset))
         now = datetime.now()
         if save_models:
             date_time = now.strftime("_%Y-%m-%d_%H-%M")
             save_path = Path('./TrainedModels') / f'conv_nn{date_time}.pth'
             torch.save(net.state_dict(), save_path)
+
     logger.stop()
     print('Finished Training')

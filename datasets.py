@@ -17,7 +17,7 @@ from utils.file_patient_session import filename_to_patient_id, filename_to_sessi
 mne.set_log_level("WARNING")
 
 # todo ŻADNYCH ZMIENNYCH GLOBALNYCH!
-Df = pd.read_csv("personality_57.csv")
+Df = pd.read_csv("personality_57_rec.csv")
 # todo read this file from some common place, e.g. Preprocess class
 segment_length = 2000
 sfreq = 500
@@ -30,7 +30,8 @@ class WindowedEEGDataset(Dataset):
     def __init__(self, index_file, root_dir, transform=None):
         with open(index_file, 'r') as f:
             self.index = json.load(f)
-        self.labels = pd.read_csv("personality_57.csv")[['hash', 'NEO N', 'NEO E', 'NEO O', 'NEO U', 'NEO S']]
+        # self.labels = pd.read_csv("personality_57.csv")[['hash', 'NEO N', 'NEO E', 'NEO O', 'NEO U', 'NEO S']]
+        self.labels = pd.read_csv("personality_57_rec.csv")[['hash', 'REC N', 'REC E', 'REC O', 'REC U', 'REC S']]
         for column in self.labels.columns:
             if column == 'hash':
                 continue
@@ -75,7 +76,8 @@ class WindowedSequenceEEGDataset(Dataset):
     def __init__(self, index_file, root_dir, transform=None):
         with open(index_file, 'r') as f:
             self.index = json.load(f)
-        self.labels = pd.read_csv("personality_57.csv")[['hash', 'NEO N', 'NEO E', 'NEO O', 'NEO U', 'NEO S']]
+        # self.labels = pd.read_csv("personality_57.csv")[['hash', 'NEO N', 'NEO E', 'NEO O', 'NEO U', 'NEO S']]
+        self.labels = pd.read_csv("personality_57_rec.csv")[['hash', 'REC N', 'REC E', 'REC O', 'REC U', 'REC S']]
         for column in self.labels.columns:
             if column == 'hash':
                 continue
@@ -93,14 +95,15 @@ class WindowedSequenceEEGDataset(Dataset):
         hash = info["hash"]
         session = info["session"]
 
-        raw = mne.io.read_raw_edf(join(self.root_dir, f"{hash}_rest_standardized_T{session}.edf"))
+        raw = mne.io.read_raw_edf(join(self.root_dir, f"{hash}_rest_standardized_T{session:02d}.edf"))
         segmented = mne.make_fixed_length_epochs(raw=raw, duration=epoch_len, preload=True,
                                                  overlap=epoch_len * overlap)
         data = segmented.get_data()
 
-        big_5_params = self.labels.loc[self.labels['hash'] == hash][['NEO N', 'NEO E', 'NEO O', 'NEO U', 'NEO S']]
+        # big_5_params = self.labels.loc[self.labels['hash'] == hash][['NEO N', 'NEO E', 'NEO O', 'NEO U', 'NEO S']]
+        big_5_params = self.labels.loc[self.labels['hash'] == hash][['REC N', 'REC E', 'REC O', 'REC U', 'REC S']]
         big_5_params = big_5_params.to_numpy()
-
+        sb5 = big_5_params.shape
         sample = [torch.FloatTensor(data),
                   torch.FloatTensor(big_5_params)]  # {'data': data, 'big_5_params': big_5_params}
 

@@ -73,8 +73,8 @@ class Preprocess:
                 # info crop the raw file to [t_min, t_max) range
                 # todo check if the length of file is ok; ?skip file if not???
                 # todo not sure whetehr substracting 1 / sfreq was correct...
-                # self.raw.crop(tmin=self.t_min, tmax=self.t_max - 1/self.raw.info['sfreq'])
-                self.raw.crop(tmin=self.t_min, tmax=self.t_max)
+                self.raw.crop(tmin=self.t_min, tmax=self.t_max - 1/self.raw.info['sfreq'])
+                # self.raw.crop(tmin=self.t_min, tmax=self.t_max)
         elif self.filetype == 'fdt':
             in_file = Path(self.datadir) / f"{self.person}" / f"{self.person}_rest_T{self.session}.set"
             self.raw = mne.io.read_raw_eeglab(input_fname=in_file.absolute().as_posix(), eog='auto', preload=preload)
@@ -330,7 +330,7 @@ class Preprocess:
         plt.savefig(f"./morlet_epochs_{self.person}.png")
         plt.show()
 
-    def preprocess(self):
+    def preprocess(self, plot=False):
         # info read edf file
         self.read_file(drop_channels=True, preload=True)
         # info get 0--30Hz band pass, and remove 50 Hz frequency
@@ -351,7 +351,8 @@ class Preprocess:
         self.reference_to_average(plot=False)
         self.segment_data(plot=False)
         self.morlet_epochs()
-        self.morlet_epochs_plot()
+        if plot:
+            self.morlet_epochs_plot()
 
     def get_morlet_df(self):
         df = DataFrame(self.morlet.data.mean(axis=-1))

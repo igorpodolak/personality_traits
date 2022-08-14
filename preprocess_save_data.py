@@ -25,7 +25,7 @@ def main(opts):
     # info reference to average, segment to overlapping fixed length segments, build morlet epochs
     # pp.read_file(drop_channels=True, preload=True)
     # before = copy.deepcopy(pp)
-    pp.preprocess()
+    pp.preprocess(plot=False)
 
     # path = Path().ab + '\\data\\REST_preprocessed'
 
@@ -37,7 +37,7 @@ def main(opts):
 
 if __name__ == '__main__':
 
-    Df = pd.read_csv("./personality_57.csv")
+    Df = pd.read_csv("./personality_57_rec.csv")
 
     if platform.node().startswith('LAPTOP-0TK'):
         datadir = Path().absolute() / 'data' / 'REST_baza'
