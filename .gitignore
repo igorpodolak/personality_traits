@@ -6,3 +6,5 @@ logdir/*
 
 # Project exclude paths
 /.neptune/
+
+*.pyc
