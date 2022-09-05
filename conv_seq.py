@@ -16,20 +16,20 @@ from torch.nn import init
 
 # writer = SummaryWriter('./logsdir')
 from utils.loggers import Logger
+from settings import *
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-torch.manual_seed(139462371)
+path = path_seq
 
-# todo zmienne do klas i funkcji jako pola klas oraz parametry!!!!
-if platform.node().startswith('LAPTOP-0TK'):
-    path = Path().absolute() / 'data' / 'REST_standardized'
-elif platform.node().startswith('Igors-MacBook-Pro') or platform.node().startswith('igor-podolak-6.laptop.matinf'):
-    DATA_ROOT_DIR = Path('/Users/igor/data')
-    # info nazwa kartoteki z plikami -- wartosc w parametrze wywolania --datadir
-    #     datadir = f"{DATA_ROOT_DIR}/personality_traits/RESTS_gr87"
-    # datadir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87'
-    standardized_dir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_standardized'
-    path = standardized_dir
+# # todo zmienne do klas i funkcji jako pola klas oraz parametry!!!!
+# if platform.node().startswith('LAPTOP-0TK'):
+#     path = Path().absolute() / 'data' / 'REST_standardized'
+# elif platform.node().startswith('Igors-MacBook-Pro') or platform.node().startswith('igor-podolak-6.laptop.matinf'):
+#     DATA_ROOT_DIR = Path('/Users/igor/data')
+#     # info nazwa kartoteki z plikami -- wartosc w parametrze wywolania --datadir
+#     #     datadir = f"{DATA_ROOT_DIR}/personality_traits/RESTS_gr87"
+#     # datadir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87'
+#     standardized_dir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_standardized'
+#     path = standardized_dir
 
 
 # check if in debug mode
@@ -45,8 +45,10 @@ def is_debug_mode() -> bool:
 
 # Assuming that we are on a CUDA machine, this should print a CUDA device:
 
+
 def train_val_dataset(dataset, val_split=0.25):
-    train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=val_split)
+    train_idx, val_idx = train_test_split(
+        list(range(len(dataset))), test_size=val_split)
     datasets = {
         'train': Subset(dataset, train_idx),
         'val': Subset(dataset, val_idx)
@@ -58,13 +60,17 @@ class NetSeq(nn.Module):
     def __init__(self, fc1_size=250, nonlinearity_type='relu', init_mode='kaiming', kaiming_mode='fan_in'):
         super().__init__()
         self.fc1_size = fc1_size
-        self.conv1d1 = nn.Conv1d(in_channels=19, out_channels=19, kernel_size=10)
+        self.conv1d1 = nn.Conv1d(
+            in_channels=19, out_channels=19, kernel_size=10)
         self.batch_norm0 = nn.BatchNorm1d(19)
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8, kernel_size=(3, 10), stride=(1, 2))
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=8,
+                               kernel_size=(3, 10), stride=(1, 2))
         self.batch_norm = nn.BatchNorm2d(8)
-        self.conv2 = nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(3, 15), stride=(1, 2))
+        self.conv2 = nn.Conv2d(
+            in_channels=8, out_channels=16, kernel_size=(3, 15), stride=(1, 2))
         self.batch_norm2 = nn.BatchNorm2d(16)
-        self.conv3 = nn.Conv2d(in_channels=16, out_channels=40, kernel_size=(2, 20), stride=(1, 2))
+        self.conv3 = nn.Conv2d(
+            in_channels=16, out_channels=40, kernel_size=(2, 20), stride=(1, 2))
         self.batch_norm3 = nn.BatchNorm2d(40)
         self.fc1 = nn.Linear(400, self.fc1_size)
         # self.fc2 = nn.Linear(250, 120)
@@ -87,12 +93,17 @@ class NetSeq(nn.Module):
         self.init_mode = init_mode
         self.kaiming_mode = kaiming_mode
         if self.init_mode == 'kaiming':
-            init.kaiming_uniform_(self.conv1d1.weight, mode=self.kaiming_mode, nonlinearity=self.nonlinearity_type)
-            init.kaiming_uniform_(self.conv1.weight, mode=self.kaiming_mode, nonlinearity=self.nonlinearity_type)
-            init.kaiming_uniform_(self.conv2.weight, mode=self.kaiming_mode, nonlinearity=self.nonlinearity_type)
-            init.kaiming_uniform_(self.conv3.weight, mode=self.kaiming_mode, nonlinearity=self.nonlinearity_type)
+            init.kaiming_uniform_(
+                self.conv1d1.weight, mode=self.kaiming_mode, nonlinearity=self.nonlinearity_type)
+            init.kaiming_uniform_(
+                self.conv1.weight, mode=self.kaiming_mode, nonlinearity=self.nonlinearity_type)
+            init.kaiming_uniform_(
+                self.conv2.weight, mode=self.kaiming_mode, nonlinearity=self.nonlinearity_type)
+            init.kaiming_uniform_(
+                self.conv3.weight, mode=self.kaiming_mode, nonlinearity=self.nonlinearity_type)
         elif self.init_mode == 'xavier':
-            gain_val = nn.init.calculate_gain(nonlinearity=self.nonlinearity_type)
+            gain_val = nn.init.calculate_gain(
+                nonlinearity=self.nonlinearity_type)
             init.xavier_uniform_(self.conv1d1.weight, gain=gain_val)
             init.xavier_uniform_(self.conv1.weight, gain=gain_val)
             init.xavier_uniform_(self.conv2.weight, gain=gain_val)
@@ -112,10 +123,11 @@ class NetSeq(nn.Module):
         init.constant_(self.batch_norm2.bias, 0)
         init.constant_(self.batch_norm3.bias, 0)
 
-
-        init.kaiming_uniform_(self.fc1.weight, mode=self.kaiming_mode, nonlinearity='relu')
+        init.kaiming_uniform_(
+            self.fc1.weight, mode=self.kaiming_mode, nonlinearity='relu')
         init.constant_(self.fc1.bias, 0)
-        init.kaiming_uniform_(self.fc6.weight, mode=self.kaiming_mode, nonlinearity='linear')
+        init.kaiming_uniform_(
+            self.fc6.weight, mode=self.kaiming_mode, nonlinearity='linear')
         init.constant_(self.fc6.bias, 0)
 
     def forward(self, z):
@@ -166,7 +178,8 @@ if __name__ == "__main__":
     do_logging = True
     if is_debug_mode():
         do_logging = False
-    logger = Logger(flags={'neptune': do_logging}, project='personality-traits')
+    logger = Logger(flags={'neptune': do_logging},
+                    project='personality-traits')
     logger.add(
         ["simple_convd", f"node={platform.node()}",
          f"data={dataset_type}",
@@ -188,9 +201,12 @@ if __name__ == "__main__":
          ])
 
     if dataset_type == 'windowed':
-        dataset = WindowedEEGDataset(path / f'{dataset_type}_index.json', path)  # TODO maybe needs more transforms
+        # TODO maybe needs more transforms
+        dataset = WindowedEEGDataset(path / f'{dataset_type}_index.json', path)
     elif dataset_type == 'seq_windowed':
-        dataset = WindowedSequenceEEGDataset(path / f'{dataset_type}_index.json', path)  # TODO maybe needs more transforms
+        # TODO maybe needs more transforms
+        dataset = WindowedSequenceEEGDataset(
+            path / f'{dataset_type}_index.json', path)
 
     splitted = train_val_dataset(dataset, val_split=0.2)
     trainloader = DataLoader(splitted['train'], batch_size=batch_size, shuffle=True,
@@ -200,12 +216,14 @@ if __name__ == "__main__":
                            batch_size=batch_size,
                            shuffle=False, drop_last=False, num_workers=num_workers)
 
-    net = NetSeq(fc1_size=fc1_size, init_mode=init_mode, kaiming_mode=kaiming_mode)
+    net = NetSeq(fc1_size=fc1_size, init_mode=init_mode,
+                 kaiming_mode=kaiming_mode)
 
     criterion = nn.MSELoss()
     optimizer = optim.AdamW(net.parameters(), weight_decay=weight_decay)
     if scheduler_type is not None and scheduler_type.lower() == "cosinelr":
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=epochs_to_run - 1, verbose=True)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer=optimizer, T_max=epochs_to_run - 1, verbose=True)
     for epoch in range(epochs_to_run):  # loop over the dataset multiple times
         running_loss = 0.0
         net.train()

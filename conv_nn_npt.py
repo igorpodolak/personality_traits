@@ -15,20 +15,19 @@ from torch.nn import init
 
 # writer = SummaryWriter('./logsdir')
 from utils.loggers import Logger
+from settings import *
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-torch.manual_seed(139462371)
 
-# todo zmienne do klas i funkcji jako pola klas oraz parametry!!!!
-if platform.node().startswith('LAPTOP-0TK'):
-    path = Path().absolute() / 'data'
-elif platform.node().startswith('Igors-MacBook-Pro') or platform.node().startswith('igor-podolak-6.laptop.matinf'):
-    DATA_ROOT_DIR = Path('/Users/igor/data')
-    # info nazwa kartoteki z plikami -- wartosc w parametrze wywolania --datadir
-    #     datadir = f"{DATA_ROOT_DIR}/personality_traits/RESTS_gr87"
-    # datadir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87'
-    standardized_dir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_standardized'
-    path = DATA_ROOT_DIR
+# # todo zmienne do klas i funkcji jako pola klas oraz parametry!!!!
+# if platform.node().startswith('LAPTOP-0TK'):
+#     path = Path().absolute() / 'data'
+# elif platform.node().startswith('Igors-MacBook-Pro') or platform.node().startswith('igor-podolak-6.laptop.matinf'):
+#     DATA_ROOT_DIR = Path('/Users/igor/data')
+#     # info nazwa kartoteki z plikami -- wartosc w parametrze wywolania --datadir
+#     #     datadir = f"{DATA_ROOT_DIR}/personality_traits/RESTS_gr87"
+#     # datadir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87'
+#     standardized_dir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_standardized'
+#     path = DATA_ROOT_DIR
 
 
 # Assuming that we are on a CUDA machine, this should print a CUDA device:
@@ -148,7 +147,7 @@ class Net(nn.Module):
 if __name__ == "__main__":
     batch_size = 32
     channels = 19
-    save_models = False
+    save_models = True  # False
     print_every = 0
     append_to_running_loss_file = False
     dataset_type = 'seq_windowed'

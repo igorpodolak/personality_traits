@@ -16,16 +16,11 @@ from utils.file_patient_session import filename_to_patient_id, filename_to_sessi
 import numpy as np
 import h5py
 import random
+from settings import *
 
 mne.set_log_level("WARNING")
 
-# todo ŻADNYCH ZMIENNYCH GLOBALNYCH!
-Df = pd.read_csv("personality_57_rec.csv")
 # todo read this file from some common place, e.g. Preprocess class
-segment_length = 2000
-sfreq = 500
-epoch_len = segment_length / sfreq
-overlap = 0.5
 
 
 class WindowedEEGDataset(Dataset):
@@ -40,7 +35,7 @@ class WindowedEEGDataset(Dataset):
                 continue
         self.data_dir = data_dir
         self.transform = transform
-        self.hf_name = "windowed_EEG_dataset.hdf5"
+        self.hf_name = f"windowed_EEG_dataset_{segment_length}_{sfreq}_{overlap}.hdf5"
         self.create_dataset_file()
         with h5py.File(join(self.data_dir, self.hf_name), 'r') as f:
             self.len = f['data'].shape[0]
@@ -86,11 +81,11 @@ class WindowedEEGDataset(Dataset):
         if isfile(join(self.data_dir, self.hf_name)):
             return
         with h5py.File(join(self.data_dir, self.hf_name), 'w') as hf:
-            files = [f for f in listdir(path) if isfile(
-                join(path, f)) and f.lower().endswith(('.edf'))]
+            files = [f for f in listdir(path_seq) if isfile(
+                join(path_seq, f)) and f.lower().endswith(('.edf'))]
 
             for file in tqdm(files):
-                raw = mne.io.read_raw_edf(path / file)
+                raw = mne.io.read_raw_edf(path_seq / file)
                 segmented = mne.make_fixed_length_epochs(raw=raw, duration=epoch_len, preload=True,
                                                          overlap=epoch_len * overlap)
                 data = segmented.get_data()
@@ -106,12 +101,13 @@ class WindowedEEGDataset(Dataset):
                 if np.isnan(np.sum(label)):
                     continue
                 if not hf.keys():
+                    compression_opts = 4
                     hf.create_dataset('data', data=data,
-                                      compression="gzip", compression_opts=1, maxshape=data_shape)
+                                      compression="gzip", compression_opts=compression_opts, maxshape=data_shape)
                     hf.create_dataset('label', data=label,
-                                      compression="gzip", compression_opts=1, maxshape=label_shape)
+                                      compression="gzip", compression_opts=compression_opts, maxshape=label_shape)
                     hf.create_dataset('hash', data=[hash],
-                                      compression="gzip", compression_opts=1, maxshape=(None,))
+                                      compression="gzip", compression_opts=compression_opts, maxshape=(None,))
                 else:
                     hf['data'].resize(
                         (hf['data'].shape[0] + data.shape[0]), axis=0)
@@ -208,16 +204,16 @@ def create_seq_windowed_index():
 
 
 if __name__ == "__main__":
-    # todo zmienne do klas i jako parametry!!!!
-    if platform.node().startswith('LAPTOP-0TK'):
-        path = Path().absolute() / 'data'
-    elif platform.node().startswith('Igors-MacBook-Pro') or platform.node().startswith('igor-podolak-6.laptop.matinf'):
-        DATA_ROOT_DIR = Path('/Users/igor/data')
-        # info nazwa kartoteki z plikami -- wartosc w parametrze wywolania --datadir
-        #     datadir = f"{DATA_ROOT_DIR}/personality_traits/RESTS_gr87"
-        # datadir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87'
-        standarized_dir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_standarized'
-        path = DATA_ROOT_DIR
+    # # todo zmienne do klas i jako parametry!!!!
+    # if platform.node().startswith('LAPTOP-0TK'):
+    #     path = Path().absolute() / 'data'
+    # elif platform.node().startswith('Igors-MacBook-Pro') or platform.node().startswith('igor-podolak-6.laptop.matinf'):
+    #     DATA_ROOT_DIR = Path('/Users/igor/data')
+    #     # info nazwa kartoteki z plikami -- wartosc w parametrze wywolania --datadir
+    #     #     datadir = f"{DATA_ROOT_DIR}/personality_traits/RESTS_gr87"
+    #     # datadir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87'
+    #     standarized_dir = DATA_ROOT_DIR / 'personality_traits' / 'RESTS_gr87_standarized'
+    #     path = DATA_ROOT_DIR
 
     # create_windowed_index()
     wed = WindowedEEGDataset(path)

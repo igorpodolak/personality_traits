@@ -3,6 +3,7 @@ data/*
 figs/*
 jupyter/*
 logdir/*
+TrainedModels/*
 
 # Project exclude paths
 /.neptune/
